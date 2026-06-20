@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1a4a7a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="تقارير المستشفيات">
+<title>نظام تقارير المستشفيات</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--p:#1a4a7a;--pl:#2563a8;--ac:#0ea5a0;--bg:#f0f4f8;--card:#fff;--bdr:#dde4ed;--txt:#1a2535;--mt:#6b7a90}
+body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;font-size:15px}
+button,input,select,textarea{font-family:inherit}
+
+/* HEADER */
+.hdr{background:linear-gradient(135deg,var(--p),var(--pl));color:white;padding:12px 14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.2)}
+.hdr-row{display:flex;align-items:center;gap:10}
+.hdr-ico{font-size:22px;flex-shrink:0}
+.hdr-txt{flex:1;min-width:0}
+.hdr-txt h1{font-size:15px;font-weight:700;line-height:1.2}
+.hdr-txt p{font-size:10px;opacity:.8;margin-top:2px;line-height:1.35}
+.hdr-btn{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:white;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+
+/* FILTERS */
+.filters{background:white;padding:11px 13px;border-bottom:1px solid var(--bdr);display:flex;flex-direction:column;gap:8px}
+.filters-row{display:flex;gap:7px}
+.fg{flex:1}
+.fg label{display:block;font-size:10px;font-weight:700;color:var(--mt);margin-bottom:3px;text-transform:uppercase}
+.fg select,.fg input,.search-inp{width:100%;padding:9px 10px;border:1.5px solid var(--bdr);border-radius:10px;font-size:13px;color:var(--txt);background:white;-webkit-appearance:none;appearance:none;direction:rtl;outline:none}
+.search-wrap{position:relative}
+.search-wrap .ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--mt);pointer-events:none}
+.search-inp{padding:9px 12px 9px 32px}
+
+/* STATS */
+.stats{background:var(--p);color:white;padding:8px 14px}
+.stats span{font-size:13px;opacity:.9}
+
+/* CARDS */
+.cards{padding:10px;display:flex;flex-direction:column;gap:9px;padding-bottom:90px}
+.card{background:white;border-radius:14px;border:1.5px solid var(--bdr);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.card-top{padding:11px 12px 9px;display:flex;align-items:flex-start;gap:9px;border-bottom:1px solid var(--bdr)}
+.dept-ico{width:40px;height:40px;border-radius:10px;background:#f0f4f8;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.card-titles{flex:1;min-width:0}
+.card-titles .hosp{font-size:14px;font-weight:700;line-height:1.3}
+.card-titles .dept{font-size:12px;color:var(--mt);margin-top:2px}
+.badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.card-meta{padding:9px 12px;display:grid;grid-template-columns:1fr 1fr;gap:5px 8px}
+.meta-item .lbl{font-size:10px;color:var(--mt);font-weight:600;text-transform:uppercase}
+.meta-item .val{font-size:13px;font-weight:500;margin-top:1px}
+.card-foot{padding:8px 12px;display:flex;gap:7px;border-top:1px solid var(--bdr)}
+.btn-view{flex:1;padding:11px;background:var(--p);color:white;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+.btn-del{padding:11px 15px;background:#fff0f0;color:#dc2626;border:none;border-radius:10px;font-size:18px;cursor:pointer}
+
+/* EMPTY */
+.empty{text-align:center;padding:60px 20px;color:var(--mt)}
+.empty .eico{font-size:50px;margin-bottom:12px}
+.empty h3{font-size:16px;color:var(--txt);font-weight:700;margin-bottom:6px}
+.empty p{font-size:13px;margin-bottom:20px}
+.empty-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+
+/* FAB */
+.fab{position:fixed;bottom:22px;left:18px;width:54px;height:54px;border-radius:50%;background:var(--ac);color:white;border:none;font-size:28px;cursor:pointer;box-shadow:0 4px 14px rgba(14,165,160,.4);z-index:150;display:flex;align-items:center;justify-content:center}
+
+/* OVERLAY */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:flex-end}
+.overlay.open{display:flex}
+.sheet{background:white;border-radius:20px 20px 0 0;width:100%;max-height:90vh;display:flex;flex-direction:column}
+.sheet-handle{width:40px;height:4px;background:#ddd;border-radius:2px;margin:12px auto 4px;flex-shrink:0}
+.sheet-hdr{padding:10px 16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.sheet-hdr-ico{width:42px;height:42px;border-radius:12px;background:#f0f4f8;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.sheet-hdr-txt{flex:1;min-width:0}
+.sheet-hdr-txt h2{font-weight:700;font-size:15px}
+.sheet-hdr-txt p{font-size:12px;color:var(--mt);margin-top:1px}
+.sheet-close{width:32px;height:32px;border-radius:50%;background:#f0f4f8;border:none;font-size:17px;cursor:pointer;color:var(--mt);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.sheet-body{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;padding:12px 16px 28px}
+
+/* MANAGE TABS */
+.m-tabs{display:flex;overflow-x:auto;padding:10px 12px 0;gap:6px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.m-tabs::-webkit-scrollbar{display:none}
+.m-tab{padding:7px 14px;border-radius:20px 20px 0 0;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;border:none;flex-shrink:0;background:#f0f4f8;color:var(--mt)}
+.m-tab.active{background:var(--p);color:white}
+.m-content{padding:12px 14px 0}
+.m-list{max-height:190px;overflow-y:auto;-webkit-overflow-scrolling:touch;margin-bottom:10px}
+.m-item{display:flex;align-items:center;justify-content:space-between;background:#f0f4f8;border-radius:10px;padding:9px 10px;margin-bottom:6px}
+.m-item span{font-size:13px;flex:1}
+.m-del{background:none;border:none;font-size:18px;cursor:pointer;color:#dc2626;padding:4px 8px}
+.m-empty{text-align:center;padding:20px 0;color:var(--mt);font-size:13px}
+.m-sort-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.m-sort-btn{background:none;border:none;font-size:13px;cursor:pointer;color:var(--p);padding:4px 8px;font-weight:700}
+.m-add-row{display:flex;gap:8px}
+.m-inp{flex:1;padding:9px 12px;border:1.5px solid var(--bdr);border-radius:10px;font-size:14px;direction:rtl;background:white;color:var(--txt);outline:none}
+.m-inp-sm{width:54px;flex:none}
+.m-add-btn{padding:9px 14px;background:var(--p);color:white;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+
+/* FORM */
+.form-group{margin-bottom:11px}
+.form-group label{display:block;font-size:11px;font-weight:700;color:var(--mt);margin-bottom:4px;text-transform:uppercase}
+.form-group select,.form-group textarea,.form-group input[type=text]{width:100%;padding:10px 12px;border:1.5px solid var(--bdr);border-radius:10px;font-size:14px;direction:rtl;background:white;color:var(--txt);-webkit-appearance:none;appearance:none;outline:none}
+.form-group textarea{min-height:75px;resize:vertical}
+.file-zone{display:block;border:2px dashed var(--bdr);border-radius:12px;padding:16px;text-align:center;cursor:pointer;background:#fafbfc}
+.file-zone .fz-ico{font-size:30px;margin-bottom:6px}
+.file-zone .fz-title{font-size:14px;color:var(--p);font-weight:600}
+.file-zone .fz-sub{font-size:11px;color:var(--mt);margin-top:4px}
+
+/* INFO GRID */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+.info-box{background:#f0f4f8;border-radius:10px;padding:9px 11px}
+.info-box .lbl{font-size:10px;color:var(--mt);font-weight:700;text-transform:uppercase}
+.info-box .val{font-size:13px;font-weight:600;margin-top:2px}
+.sec-title{font-size:11px;font-weight:700;color:var(--mt);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px}
+.notes-box{background:#f0f4f8;border-radius:10px;padding:11px;font-size:14px;line-height:1.7;border-right:3px solid var(--p);margin-bottom:14px}
+
+/* FILE VIEWER */
+.file-bar{display:flex;align-items:center;gap:10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:12px 14px;margin-bottom:6px}
+.file-bar .fbn{font-size:24px}
+.file-bar .fbt{flex:1;min-width:0}
+.file-bar .fbt .fn{font-size:13px;font-weight:600;color:#1d4ed8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-bar .fbt .fs{font-size:11px;color:var(--mt);margin-top:2px}
+.file-view-btn{padding:8px 14px;background:#1d4ed8;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0}
+.file-frame{border:1px solid #bfdbfe;border-top:none;border-radius:0 0 12px 12px;overflow:hidden;margin-bottom:14px}
+.file-frame iframe{width:100%;height:480px;border:none;display:block}
+.file-frame img{width:100%;display:block;max-height:480px;object-fit:contain;background:#000}
+.office-msg{padding:24px;text-align:center;color:var(--mt);background:#f8faff}
+
+/* BUTTONS */
+.btn-primary{width:100%;padding:13px;background:var(--p);color:white;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px}
+.btn-danger{width:100%;padding:13px;background:#fff0f0;color:#dc2626;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px}
+.btn-ghost{width:100%;padding:13px;background:#f0f4f8;color:var(--mt);border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px}
+.warn-box{background:#fef9c3;border:1px solid #fde68a;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:13px;color:#854d0e}
+
+/* CONFIRM DIALOG */
+.confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:center;justify-content:center;padding:20px}
+.confirm-overlay.open{display:flex}
+.confirm-box{background:white;border-radius:18px;padding:24px;width:100%;max-width:300px;text-align:center}
+.confirm-box .cico{font-size:36px;margin-bottom:8px}
+.confirm-box h3{font-size:15px;font-weight:700;margin-bottom:6px}
+.confirm-box p{font-size:13px;color:var(--mt);margin-bottom:20px}
+.confirm-btns{display:flex;gap:10px}
+.confirm-btns button{flex:1;padding:11px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+.confirm-btns .cancel{background:#f0f4f8;color:var(--mt)}
+.confirm-btns .ok{background:#dc2626;color:white}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-row">
+    <span class="hdr-ico">🏥</span>
+    <div class="hdr-txt">
+      <h1>نظام تقارير المستشفيات</h1>
+      <p>الإدارة العامة لشئون المستشفيات — الأمانة العامة للصحة النفسية وعلاج الإدمان</p>
+    </div>
+    <button class="hdr-btn" onclick="openManage()">⚙️</button>
+  </div>
+</div>
+
+<!-- FILTERS -->
+<div class="filters">
+  <div class="search-wrap">
+    <span class="ico">🔍</span>
+    <input class="search-inp" id="fSearch" placeholder="ابحث عن مستشفى أو إدارة..." oninput="renderCards()">
+  </div>
+  <div class="filters-row">
+    <div class="fg"><label>المستشفى</label><select id="fH" onchange="renderCards()"><option value="">الكل</option></select></div>
+    <div class="fg"><label>الإدارة</label><select id="fD" onchange="renderCards()"><option value="">الكل</option></select></div>
+  </div>
+  <div class="filters-row">
+    <div class="fg"><label>الحالة</label><select id="fS" onchange="renderCards()"><option value="">الكل</option></select></div>
+    <div class="fg"><label>الشهر</label><select id="fM" onchange="renderCards()"><option value="">الكل</option></select></div>
+  </div>
+  <div class="filters-row" style="align-items:flex-end">
+    <div class="fg"><label>ترتيب حسب</label>
+      <select id="sortField" onchange="renderCards()">
+        <option value="hospital">المستشفى</option>
+        <option value="dept">الإدارة</option>
+        <option value="month">الشهر</option>
+        <option value="status">الحالة</option>
+        <option value="date">التاريخ</option>
+      </select>
+    </div>
+    <button id="sortDirBtn" onclick="toggleSortDir()"
+      style="padding:9px 14px;background:#eff6ff;border:1.5px solid var(--bdr);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;color:#1d4ed8;white-space:nowrap;height:38px">
+      ↑ تصاعدي
+    </button>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats"><span>إجمالي التقارير: <strong id="statsCount">0</strong></span></div>
+
+<!-- CARDS -->
+<div class="cards" id="cardsContainer"></div>
+
+<!-- FAB -->
+<button class="fab" onclick="openAdd()">＋</button>
+
+<!-- ══ MANAGE SHEET ══ -->
+<div class="overlay" id="manageOverlay" onclick="overlayClick(event,'manageOverlay')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-hdr">
+      <div class="sheet-hdr-ico">⚙️</div>
+      <div class="sheet-hdr-txt"><h2>إدارة القوائم</h2><p>أضف أو احذف من أي قائمة</p></div>
+      <button class="sheet-close" onclick="closeSheet('manageOverlay')">✕</button>
+    </div>
+    <div class="sheet-body" style="padding:0 0 20px">
+      <div class="m-tabs" id="mTabs"></div>
+      <div class="m-content" id="mContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADD REPORT SHEET ══ -->
+<div class="overlay" id="addOverlay" onclick="overlayClick(event,'addOverlay')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-hdr">
+      <div class="sheet-hdr-ico">➕</div>
+      <div class="sheet-hdr-txt"><h2>إضافة تقرير جديد</h2><p>أدخل بيانات التقرير</p></div>
+      <button class="sheet-close" onclick="closeSheet('addOverlay')">✕</button>
+    </div>
+    <div class="sheet-body" id="addBody"></div>
+  </div>
+</div>
+
+<!-- ══ REPORT DETAIL SHEET ══ -->
+<div class="overlay" id="detailOverlay" onclick="overlayClick(event,'detailOverlay')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-hdr">
+      <div class="sheet-hdr-ico" id="detailIco">📋</div>
+      <div class="sheet-hdr-txt"><h2 id="detailTitle"></h2><p id="detailSub"></p></div>
+      <button class="sheet-close" onclick="closeSheet('detailOverlay')">✕</button>
+    </div>
+    <div class="sheet-body" id="detailBody"></div>
+  </div>
+</div>
+
+<!-- ══ CONFIRM ══ -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="cico">🗑️</div>
+    <h3>تأكيد الحذف</h3>
+    <p id="confirmMsg">هتحذف العنصر ده؟</p>
+    <div class="confirm-btns">
+      <button class="cancel" onclick="closeConfirm()">إلغاء</button>
+      <button class="ok" onclick="doConfirm()">حذف ✓</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script>
+// ══ FIREBASE ══
+const firebaseConfig = {
+  apiKey: "AIzaSyBKlqdweMBTqTxZYgSVVK2Dnf_3V6ZR8WU",
+  authDomain: "hospital-reports-cc20f.firebaseapp.com",
+  projectId: "hospital-reports-cc20f",
+  storageBucket: "hospital-reports-cc20f.firebasestorage.app",
+  messagingSenderId: "872959004550",
+  appId: "1:872959004550:web:c676bfbcbe1c0231c72607"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const configRef = db.collection('config').doc('lists');
+const reportsRef = db.collection('reports');
+
+// ══ STATE ══
+let state = {
+  hospitals: [],
+  departments: [],
+  months: ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"],
+  statuses: ["مُرسَل","قيد المراجعة","مسودة","مفقود"],
+  staff: [],
+  reports: [],
+};
+let sortDir = "asc";
+let activeManageTab = "hospitals";
+let currentReportId = null;
+let confirmCallback = null;
+let fileViewOpen = {};
+
+// ══ PERSIST (Firebase Firestore) ══
+function saveConfig() {
+  configRef.set({
+    hospitals: state.hospitals,
+    departments: state.departments,
+    months: state.months,
+    statuses: state.statuses,
+    staff: state.staff,
+  }).catch(e => console.error('saveConfig error', e));
+}
+
+function saveReportDoc(report) {
+  const data = {...report};
+  delete data.id;
+  reportsRef.doc(report.id).set(data).catch(e => console.error('saveReportDoc error', e));
+}
+
+function deleteReportDoc(id) {
+  reportsRef.doc(id).delete().catch(e => console.error('deleteReportDoc error', e));
+}
+
+function initFirebaseSync() {
+  configRef.onSnapshot(docSnap => {
+    if (docSnap.exists) {
+      const d = docSnap.data();
+      state.hospitals   = d.hospitals   || [];
+      state.departments = d.departments || [];
+      state.months      = d.months      || state.months;
+      state.statuses    = d.statuses    || state.statuses;
+      state.staff       = d.staff       || [];
+    } else {
+      saveConfig(); // أول مرة: ابعت القيم الافتراضية لقاعدة البيانات
+    }
+    rebuildFilters();
+    renderCards();
+    if (document.getElementById('manageOverlay').classList.contains('open')) renderManageContent();
+  }, e => console.error('configRef onSnapshot error', e));
+
+  reportsRef.onSnapshot(snap => {
+    state.reports = snap.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+    rebuildFilters();
+    renderCards();
+  }, e => console.error('reportsRef onSnapshot error', e));
+}
+
+// ══ STATUS STYLES ══
+const SS = {
+  "مُرسَل":        { bg:"#dcfce7", color:"#15803d", icon:"✅" },
+  "قيد المراجعة": { bg:"#fef9c3", color:"#854d0e", icon:"🔄" },
+  "مسودة":         { bg:"#f1f5f9", color:"#475569", icon:"📝" },
+  "مفقود":         { bg:"#fee2e2", color:"#991b1b", icon:"⚠️" },
+};
+function gs(s) { return SS[s] || { bg:"#f1f5f9", color:"#475569", icon:"📋" }; }
+
+// ══ FILTERS ══
+function rebuildFilters() {
+  const fH = document.getElementById('fH');
+  const fD = document.getElementById('fD');
+  const fS = document.getElementById('fS');
+  const fM = document.getElementById('fM');
+  const vh = fH.value, vd = fD.value, vs = fS.value, vm = fM.value;
+  fH.innerHTML = '<option value="">الكل</option>' + state.hospitals.map(h=>`<option value="${h}">${h}</option>`).join('');
+  fD.innerHTML = '<option value="">الكل</option>' + state.departments.map(d=>`<option value="${d.name}">${d.icon} ${d.name}</option>`).join('');
+  fS.innerHTML = '<option value="">الكل</option>' + state.statuses.map(s=>`<option value="${s}">${gs(s).icon} ${s}</option>`).join('');
+  fM.innerHTML = '<option value="">الكل</option>' + state.months.map(m=>`<option value="${m}">${m}</option>`).join('');
+  if (state.hospitals.includes(vh)) fH.value = vh;
+  if (state.departments.find(d=>d.name===vd)) fD.value = vd;
+  if (state.statuses.includes(vs)) fS.value = vs;
+  if (state.months.includes(vm)) fM.value = vm;
+}
+
+function toggleSortDir() {
+  sortDir = sortDir === "asc" ? "desc" : "asc";
+  document.getElementById('sortDirBtn').textContent = sortDir === "asc" ? "↑ تصاعدي" : "↓ تنازلي";
+  document.getElementById('sortDirBtn').style.background = sortDir === "asc" ? "#eff6ff" : "#fdf4ff";
+  document.getElementById('sortDirBtn').style.color = sortDir === "asc" ? "#1d4ed8" : "#7c3aed";
+  renderCards();
+}
+
+// ══ RENDER CARDS ══
+function renderCards() {
+  const search = document.getElementById('fSearch').value.trim();
+  const fH = document.getElementById('fH').value;
+  const fD = document.getElementById('fD').value;
+  const fS = document.getElementById('fS').value;
+  const fM = document.getElementById('fM').value;
+  const sortF = document.getElementById('sortField').value;
+
+  let list = state.reports.filter(r => {
+    if (fH && r.hospital !== fH) return false;
+    if (fD && r.deptName !== fD) return false;
+    if (fS && r.status !== fS) return false;
+    if (fM && r.month !== fM) return false;
+    if (search && !r.hospital.includes(search) && !r.deptName.includes(search)) return false;
+    return true;
+  }).sort((a,b) => {
+    const av = sortF==="dept"?a.deptName:sortF==="month"?a.month:sortF==="status"?a.status:sortF==="date"?a.date:a.hospital;
+    const bv = sortF==="dept"?b.deptName:sortF==="month"?b.month:sortF==="status"?b.status:sortF==="date"?b.date:b.hospital;
+    const c = av.localeCompare(bv, "ar");
+    return sortDir === "asc" ? c : -c;
+  });
+
+  document.getElementById('statsCount').textContent = list.length;
+  const cont = document.getElementById('cardsContainer');
+
+  if (state.reports.length === 0) {
+    cont.innerHTML = `<div class="empty">
+      <div class="eico">📂</div>
+      <h3>لا توجد تقارير بعد</h3>
+      <p>ابدأ بإضافة مستشفيات وإدارات من ⚙️ ثم أضف تقرير</p>
+      <div class="empty-btns">
+        <button class="btn-primary" style="width:auto;padding:10px 20px;margin:0" onclick="openManage()">⚙️ إدارة القوائم</button>
+        <button class="btn-primary" style="width:auto;padding:10px 20px;margin:0;background:var(--ac)" onclick="openAdd()">＋ إضافة تقرير</button>
+      </div>
+    </div>`;
+    return;
+  }
+
+  if (list.length === 0) {
+    cont.innerHTML = `<div class="empty"><div class="eico">🔍</div><h3>لا توجد نتائج</h3><p>جرّب تغيير معايير البحث</p></div>`;
+    return;
+  }
+
+  cont.innerHTML = list.map(r => {
+    const st = gs(r.status);
+    const dept = state.departments.find(d=>d.name===r.deptName);
+    const dico = dept ? dept.icon : "📋";
+    return `<div class="card">
+      <div class="card-top">
+        <div class="dept-ico">${dico}</div>
+        <div class="card-titles">
+          <div class="hosp">${r.hospital}</div>
+          <div class="dept">${r.deptName}</div>
+        </div>
+        <span class="badge" style="background:${st.bg};color:${st.color}">${st.icon} ${r.status}</span>
+      </div>
+      <div class="card-meta">
+        <div class="meta-item"><div class="lbl">الشهر</div><div class="val">📅 ${r.month}</div></div>
+        <div class="meta-item"><div class="lbl">التاريخ</div><div class="val">🗓 ${r.date}</div></div>
+        <div class="meta-item"><div class="lbl">رُفع بواسطة</div><div class="val">${r.submittedBy||"—"}</div></div>
+        <div class="meta-item"><div class="lbl">الملف</div><div class="val">${r.fileName?"✅ مرفق":"—"}</div></div>
+      </div>
+      <div class="card-foot">
+        <button class="btn-view" onclick="openDetail('${r.id}')">📋 عرض التقرير</button>
+        <button class="btn-del" onclick="askDelete('${r.id}')">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══ DETAIL ══
+function openDetail(id) {
+  currentReportId = id;
+  const r = state.reports.find(x=>x.id===id);
+  if (!r) return;
+  const dept = state.departments.find(d=>d.name===r.deptName);
+  document.getElementById('detailIco').textContent = dept ? dept.icon : "📋";
+  document.getElementById('detailTitle').textContent = r.hospital;
+  document.getElementById('detailSub').textContent = `${r.deptName} — ${r.month}`;
+  const st = gs(r.status);
+
+  let fileHtml = '';
+  if (r.fileUrl || r.fileName) {
+    const ext = (r.fileName||"").split('.').pop().toLowerCase();
+    const isPdf = ext === 'pdf';
+    const isImg = ['jpg','jpeg','png','gif','webp'].includes(ext);
+    const isOffice = ['doc','docx','xls','xlsx','ppt','pptx'].includes(ext);
+    const fico = isPdf?"📄":isImg?"🖼️":isOffice?(ext.startsWith('xls')?"📊":"📝"):"📎";
+    const ftype = isPdf?"PDF":isImg?"صورة":isOffice?"Office":"ملف";
+    const vid = 'fv_'+id;
+    fileHtml = `
+      <div class="sec-title" style="margin-top:14px">📎 الملف المرفق</div>
+      <div class="file-bar">
+        <span class="fbn">${fico}</span>
+        <div class="fbt"><div class="fn">${r.fileName||"الملف المرفق"}</div><div class="fs">${ftype}</div></div>
+        <button class="file-view-btn" onclick="toggleFileView('${vid}','${isPdf}','${isImg}','${isOffice}',${id})"
+          id="btn_${vid}">👁️ عرض</button>
+      </div>
+      <div id="${vid}" style="display:none">
+        ${isPdf?`<div class="file-frame"><iframe src="${r.fileUrl}" title="${r.fileName||''}"></iframe></div>`:''}
+        ${isImg?`<div class="file-frame"><img src="${r.fileUrl}" alt="${r.fileName||''}"></div>`:''}
+        ${isOffice?`<div class="file-frame"><div class="office-msg"><div style="font-size:40px;margin-bottom:10px">${fico}</div><div style="font-size:14px;font-weight:600;color:#1a2535;margin-bottom:6px">${r.fileName}</div><div style="font-size:12px;margin-bottom:12px">ملفات Office لا تُعرض مباشرة.</div><div style="font-size:12px;color:#854d0e;background:#fef9c3;border-radius:8px;padding:10px">💡 حوّل الملف لـ PDF قبل الرفع</div></div></div>`:''}
+      </div>`;
+  }
+
+  document.getElementById('detailBody').innerHTML = `
+    <div class="info-grid">
+      <div class="info-box"><div class="lbl">الحالة</div><div class="val"><span class="badge" style="background:${st.bg};color:${st.color}">${st.icon} ${r.status}</span></div></div>
+      <div class="info-box"><div class="lbl">تاريخ الرفع</div><div class="val">${r.date}</div></div>
+      <div class="info-box"><div class="lbl">رُفع بواسطة</div><div class="val">${r.submittedBy||"—"}</div></div>
+      <div class="info-box"><div class="lbl">المراجع</div><div class="val">${r.reviewedBy||"—"}</div></div>
+    </div>
+    ${r.summary && r.summary!=="—" ? `<div class="sec-title">📋 ملخص التقرير</div><div class="notes-box">${r.summary}</div>` : ''}
+    ${fileHtml}
+    <div style="margin-top:16px">
+      <button class="btn-danger" onclick="askDelete('${r.id}',true)">🗑️ حذف التقرير</button>
+      <button class="btn-ghost" onclick="closeSheet('detailOverlay')">إغلاق</button>
+    </div>`;
+
+  openSheet('detailOverlay');
+}
+
+function toggleFileView(vid, isPdf, isImg, isOffice, id) {
+  const el = document.getElementById(vid);
+  const btn = document.getElementById('btn_'+vid);
+  if (!el) return;
+  const showing = el.style.display !== 'none';
+  el.style.display = showing ? 'none' : 'block';
+  btn.textContent = showing ? '👁️ عرض' : 'إخفاء';
+}
+
+// ══ DELETE ══
+function askDelete(id, fromDetail) {
+  currentReportId = id;
+  document.getElementById('confirmMsg').textContent = "هتحذف التقرير ده؟ مش هيرجع تاني.";
+  confirmCallback = () => {
+    state.reports = state.reports.filter(x=>x.id!==id);
+    deleteReportDoc(id);
+    rebuildFilters();
+    renderCards();
+    if (fromDetail) closeSheet('detailOverlay');
+    closeConfirm();
+  };
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+function closeConfirm() { document.getElementById('confirmOverlay').classList.remove('open'); confirmCallback=null; }
+function doConfirm() { if (confirmCallback) confirmCallback(); }
+
+// ══ ADD REPORT ══
+function openAdd() {
+  const body = document.getElementById('addBody');
+  const hasH = state.hospitals.length > 0;
+  const hasD = state.departments.length > 0;
+  body.innerHTML = `
+    ${(!hasH||!hasD)?'<div class="warn-box">⚠️ أضف مستشفيات وإدارات أولاً من زرار ⚙️</div>':''}
+    <div class="form-group"><label>المستشفى *</label>
+      <select id="af_h"><option value="">— اختر —</option>${state.hospitals.map(h=>`<option>${h}</option>`).join('')}</select></div>
+    <div class="form-group"><label>الإدارة *</label>
+      <select id="af_d"><option value="">— اختر —</option>${state.departments.map(d=>`<option>${d.name}</option>`).join('')}</select></div>
+    <div class="form-group"><label>الشهر *</label>
+      <select id="af_m"><option value="">— اختر —</option>${state.months.map(m=>`<option>${m}</option>`).join('')}</select></div>
+    <div class="form-group"><label>الحالة *</label>
+      <select id="af_s"><option value="">— اختر —</option>${state.statuses.map(s=>`<option>${s}</option>`).join('')}</select></div>
+    <div class="form-group"><label>رُفع بواسطة</label>
+      <select id="af_st"><option value="">— اختر —</option>${state.staff.map(s=>`<option>${s}</option>`).join('')}</select></div>
+    <div class="form-group"><label>ملخص التقرير</label>
+      <textarea id="af_sum" placeholder="اكتب ملخص التقرير هنا..."></textarea></div>
+    <div class="form-group"><label>📎 إرفاق ملف (PDF - Word - Excel - صورة)</label>
+      <label class="file-zone" id="fileZone">
+        <input type="file" id="af_file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,image/*" style="display:none" onchange="handleFileSelect(this)">
+        <div class="fz-ico">📂</div>
+        <div class="fz-title">اضغط لاختيار ملف</div>
+        <div class="fz-sub">من الموبايل أو اللاب أو الكمبيوتر</div>
+      </label>
+    </div>
+    <button class="btn-primary" onclick="saveReport()">💾 حفظ التقرير</button>
+    <button class="btn-ghost" onclick="closeSheet('addOverlay')">إلغاء</button>`;
+  openSheet('addOverlay');
+}
+
+function handleFileSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const zone = document.getElementById('fileZone');
+  zone.innerHTML = `<input type="file" id="af_file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,image/*" style="display:none" onchange="handleFileSelect(this)">
+    <div class="fz-ico">${file.name.endsWith('.pdf')?"📄":file.name.match(/\.(doc|docx)$/)?"📝":file.name.match(/\.(xls|xlsx)$/)?"📊":"📎"}</div>
+    <div class="fz-title" style="color:#1a4a7a;font-weight:700">${file.name}</div>
+    <div class="fz-sub">اضغط لتغيير الملف</div>`;
+  const reader = new FileReader();
+  reader.onload = ev => { zone.dataset.fileUrl = ev.target.result; zone.dataset.fileName = file.name; };
+  reader.readAsDataURL(file);
+}
+
+function saveReport() {
+  const h  = document.getElementById('af_h').value;
+  const d  = document.getElementById('af_d').value;
+  const m  = document.getElementById('af_m').value;
+  const s  = document.getElementById('af_s').value;
+  const st = document.getElementById('af_st').value;
+  const sum= document.getElementById('af_sum').value.trim();
+  const zone = document.getElementById('fileZone');
+  const fileUrl  = zone.dataset.fileUrl  || "";
+  const fileName = zone.dataset.fileName || "";
+  if (!h||!d||!m||!s) { alert("اختر المستشفى والإدارة والشهر والحالة"); return; }
+  const today = new Date();
+  const dateStr = `${today.getDate()}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
+  const newId = reportsRef.doc().id;
+  const newReport = { id:newId, hospital:h, deptName:d, month:m, status:s,
+    submittedBy:st||"—", reviewedBy:"—", date:dateStr, summary:sum||"—", fileUrl, fileName, createdAt:Date.now() };
+  state.reports.unshift(newReport);
+  saveReportDoc(newReport);
+  rebuildFilters();
+  renderCards();
+  closeSheet('addOverlay');
+}
+
+// ══ MANAGE ══
+const M_TABS = [
+  {k:"hospitals", l:"🏥 مستشفيات"},
+  {k:"depts",     l:"🏛️ إدارات"},
+  {k:"staff",     l:"👤 كوادر"},
+  {k:"statuses",  l:"📌 حالات"},
+  {k:"months",    l:"📅 أشهر"},
+];
+
+function openManage() {
+  renderManageTabs();
+  renderManageContent();
+  openSheet('manageOverlay');
+}
+
+function renderManageTabs() {
+  document.getElementById('mTabs').innerHTML = M_TABS.map(t=>
+    `<button class="m-tab${activeManageTab===t.k?' active':''}" onclick="switchManageTab('${t.k}')">${t.l}</button>`
+  ).join('');
+}
+
+let mSortDir = {hospitals:"asc",departments:"asc",months:"asc",statuses:"asc",staff:"asc"};
+
+function toggleMSort(key) {
+  mSortDir[key] = mSortDir[key]==="asc"?"desc":"asc";
+  renderManageContent();
+}
+
+function switchManageTab(k) {
+  activeManageTab = k;
+  renderManageTabs();
+  renderManageContent();
+}
+
+function renderManageContent() {
+  const k = activeManageTab;
+  let items, listKey, label, addHtml;
+  if (k==="hospitals") {
+    items=state.hospitals; listKey="hospitals"; label=h=>h;
+    addHtml=`<div class="m-add-row"><input class="m-inp" id="m_nh" placeholder="اسم المستشفى" onkeydown="if(event.key==='Enter')addManageItem('hospitals')"><button class="m-add-btn" onclick="addManageItem('hospitals')">+ إضافة</button></div>`;
+  } else if (k==="depts") {
+    items=state.departments; listKey="departments"; label=d=>`${d.icon} ${d.name}`;
+    addHtml=`<div class="m-add-row"><input class="m-inp m-inp-sm" id="m_ndi" placeholder="🏥"><input class="m-inp" id="m_nd" placeholder="اسم الإدارة" onkeydown="if(event.key==='Enter')addManageItem('departments')"><button class="m-add-btn" onclick="addManageItem('departments')">+ إضافة</button></div>`;
+  } else if (k==="staff") {
+    items=state.staff; listKey="staff"; label=s=>s;
+    addHtml=`<div class="m-add-row"><input class="m-inp" id="m_nstaff" placeholder="اسم الموظف" onkeydown="if(event.key==='Enter')addManageItem('staff')"><button class="m-add-btn" onclick="addManageItem('staff')">+ إضافة</button></div>`;
+  } else if (k==="statuses") {
+    items=state.statuses; listKey="statuses"; label=s=>`${gs(s).icon} ${s}`;
+    addHtml=`<div class="m-add-row"><input class="m-inp" id="m_nst" placeholder="حالة جديدة" onkeydown="if(event.key==='Enter')addManageItem('statuses')"><button class="m-add-btn" onclick="addManageItem('statuses')">+ إضافة</button></div>`;
+  } else {
+    items=state.months; listKey="months"; label=m=>m;
+    addHtml=`<div class="m-add-row"><input class="m-inp" id="m_nm" placeholder="اسم الشهر" onkeydown="if(event.key==='Enter')addManageItem('months')"><button class="m-add-btn" onclick="addManageItem('months')">+ إضافة</button></div>`;
+  }
+
+  const sorted = [...items].sort((a,b)=>{
+    const av=typeof a==="string"?a:a.name, bv=typeof b==="string"?b:b.name;
+    return mSortDir[listKey]==="asc"?av.localeCompare(bv,"ar"):bv.localeCompare(av,"ar");
+  });
+
+  const listHtml = items.length===0
+    ? `<div class="m-empty">لا يوجد عناصر بعد</div>`
+    : sorted.map((item,i)=>{
+        const name = typeof item==="string"?item:item.name;
+        return `<div class="m-item"><span>${label(item)}</span><button class="m-del" onclick="askDelManage('${listKey}','${name}')">🗑️</button></div>`;
+      }).join('');
+
+  document.getElementById('mContent').innerHTML = `
+    <div class="m-sort-row">
+      <span style="font-size:12px;color:var(--mt);font-weight:600">${items.length} عنصر</span>
+      <button class="m-sort-btn" onclick="toggleMSort('${listKey}')">${mSortDir[listKey]==="asc"?"↑ تصاعدي":"↓ تنازلي"}</button>
+    </div>
+    <div class="m-list">${listHtml}</div>
+    ${addHtml}`;
+}
+
+function addManageItem(key) {
+  if (key==="hospitals") {
+    const v = document.getElementById('m_nh')?.value.trim(); if(!v||state.hospitals.includes(v))return; state.hospitals.push(v);
+  } else if (key==="departments") {
+    const name=document.getElementById('m_nd')?.value.trim(); if(!name||state.departments.find(d=>d.name===name))return;
+    const icon=document.getElementById('m_ndi')?.value.trim()||"🏥"; state.departments.push({name,icon,key:name.substring(0,4),color:"#374151"});
+  } else if (key==="staff") {
+    const v=document.getElementById('m_nstaff')?.value.trim(); if(!v||state.staff.includes(v))return; state.staff.push(v);
+  } else if (key==="statuses") {
+    const v=document.getElementById('m_nst')?.value.trim(); if(!v||state.statuses.includes(v))return; state.statuses.push(v);
+  } else if (key==="months") {
+    const v=document.getElementById('m_nm')?.value.trim(); if(!v||state.months.includes(v))return; state.months.push(v);
+  }
+  saveConfig(); rebuildFilters(); renderManageContent();
+}
+
+function askDelManage(key, name) {
+  document.getElementById('confirmMsg').textContent = `هتحذف "${name}"؟`;
+  confirmCallback = () => {
+    if (key==="hospitals") state.hospitals = state.hospitals.filter(x=>x!==name);
+    else if (key==="departments") state.departments = state.departments.filter(x=>x.name!==name);
+    else if (key==="staff") state.staff = state.staff.filter(x=>x!==name);
+    else if (key==="statuses") state.statuses = state.statuses.filter(x=>x!==name);
+    else if (key==="months") state.months = state.months.filter(x=>x!==name);
+    saveConfig(); rebuildFilters(); renderManageContent(); closeConfirm();
+  };
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+
+// ══ SHEET UTILS ══
+function openSheet(id) { document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden'; }
+function closeSheet(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
+function overlayClick(e, id) { if(e.target===e.currentTarget) closeSheet(id); }
+
+// ══ OFFLINE SUPPORT (Service Worker via Blob) ══
+(function registerOfflineSW() {
+  if (!('serviceWorker' in navigator)) return;
+  const swCode = `
+    const CACHE = 'hr-offline-v1';
+    self.addEventListener('install', e => {
+      e.waitUntil(caches.open(CACHE).then(c => c.add(self.registration.scope)));
+      self.skipWaiting();
+    });
+    self.addEventListener('activate', e => { self.clients.claim(); });
+    self.addEventListener('fetch', e => {
+      e.respondWith(
+        caches.match(e.request).then(cached => {
+          const fetchPromise = fetch(e.request).then(networkRes => {
+            caches.open(CACHE).then(c => c.put(e.request, networkRes.clone()));
+            return networkRes;
+          }).catch(() => cached);
+          return cached || fetchPromise;
+        })
+      );
+    });
+  `;
+  const blob = new Blob([swCode], {type:'application/javascript'});
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(()=>{});
+})();
+
+// ══ INIT ══
+rebuildFilters();
+renderCards();
+initFirebaseSync();
+</script>
+</body>
+</html>
